@@ -8,6 +8,7 @@ const app = express();
 // own import
 const infoRouter = require('./routes/infoRoutes');
 const userRouter = require('./routes/userRoutes');
+const classroomRouter = require('./routes/classroomRoutes');
 
 // MIDDLEWARE
 
@@ -40,5 +41,6 @@ app.use((req, res, next) => {
 // route mouting
 app.use('/api/test/informations', infoRouter);
 app.use('/api/users', userRouter);
+app.use('/api/classrooms', classroomRouter);
 
 module.exports = app;

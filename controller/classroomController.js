@@ -1,7 +1,8 @@
-const User = require('../models/userModel');
+const Classroom = require('../models/classroomModel');
+const crypto = require('crypto');
 
 //ROUTE HANDLER
-exports.getAllUsers = async (req, res) => {
+exports.getAllClassrooms = async (req, res) => {
   try {
     // BUILD QUERY
     // 1 filtering
@@ -13,16 +14,16 @@ exports.getAllUsers = async (req, res) => {
     let queryStr = JSON.stringify(queryObj); // แปลง queryObj เป็น string
     queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`); // replace string เป็น queryObject
 
-    const query = User.find(JSON.parse(queryStr)); // ค้นหาจาก query object
+    const query = Classroom.find(JSON.parse(queryStr)); // ค้นหาจาก query object
 
     // EXECUTE QUERY FOR IMPLEMENT ( AWAIT จะได้ผลลัพท์เป็น object ต้องเอา query แยกไว้)
-    const users = await query;
+    const classrooms = await query;
 
     // SEND RESPONSE
     res.status(200).json({
       status: 'success',
       data: {
-        users,
+        classrooms,
       },
     });
   } catch (err) {
@@ -33,32 +34,35 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-exports.getUser = async (req, res) => {
+exports.getClassroom = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const classroom = await Classroom.findById(req.params.id);
     res.status(200).json({
       status: 'success',
       data: {
-        user,
+        classroom,
       },
     });
   } catch (err) {
     res.status(404).json({
       status: 'failed',
-      message: 'user not found',
+      message: 'classroom not found',
     });
   }
 };
 
-exports.postUser = async (req, res) => {
+exports.postClassroom = async (req, res) => {
   try {
-    const newUser = await User.create(req.body);
+    code = crypto.randomBytes(3).toString('hex');
+    let classroomBody = req.body;
+    classroomBody.accessCode = code;
 
-    console.log(req.body);
+    const newClassroom = await Classroom.create(classroomBody);
+
     res.status(200).json({
       status: 'success',
       data: {
-        newUser,
+        newClassroom,
       },
     });
   } catch (err) {
@@ -69,18 +73,20 @@ exports.postUser = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
+exports.updateClassroom = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    console.log(req.body);
+    const classroom = await Classroom.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     res.status(200).json({
       status: 'success',
       data: {
-        user,
+        classroom,
       },
     });
   } catch (err) {
@@ -91,9 +97,9 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-exports.deleteUser = async (req, res) => {
+exports.deleteClassroom = async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
+    await Classroom.findByIdAndDelete(req.params.id);
     res.status(204).json({
       status: 'success',
       data: null,

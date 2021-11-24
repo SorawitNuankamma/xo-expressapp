@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const app = require('./app');
-
 dotenv.config({ path: './config.env' });
+const app = require('./app');
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
@@ -19,30 +18,6 @@ mongoose
   .then(() => {
     console.log('DB connection successful');
   });
-
-/* Create Document Example
-const testUser = new User({
-  name: 'sorawit nuankamma',
-  lineId: 'notlinexdd',
-  email: 'sorawit.nu@ku.th',
-  classroom: [
-    {
-      classId: 1,
-      role: 'owner',
-    },
-  ],
-});
-
-testUser
-  .save()
-  .then((doc) => {
-    console.log(doc);
-  })
-  .catch((err) => {
-    console.log('ERROR :', err);
-  });
-
-*/
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

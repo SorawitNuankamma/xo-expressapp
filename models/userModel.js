@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'default_user_name',
   },
-  lineId: {
+  lineID: {
     type: String,
     require: [true, 'lineID is require '],
     unique: [true, 'user already in the database'],
