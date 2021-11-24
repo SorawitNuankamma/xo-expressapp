@@ -4,8 +4,10 @@ This file for run express and middleware
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
+
 // own import
 const infoRouter = require('./routes/infoRoutes');
+const userRouter = require('./routes/userRoutes');
 
 // MIDDLEWARE
 
@@ -18,11 +20,13 @@ if (process.env.NODE_ENV === 'development') {
 // for get body as object
 app.use(express.json());
 // Example middleware
+/*
 app.use((req, res, next) => {
   // applying for every request
   console.log('Hello from middleware');
   next();
 });
+*/
 // for access file on specifict path
 app.use(express.static(`${__dirname}/public`));
 
@@ -35,5 +39,6 @@ app.use((req, res, next) => {
 // ROUTE
 // route mouting
 app.use('/api/test/informations', infoRouter);
+app.use('/api/users', userRouter);
 
 module.exports = app;

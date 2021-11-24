@@ -1,10 +1,48 @@
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-// get enviroment variable from config file ( Set before calling app)
-dotenv.config({ path: './config.env' });
-
 const app = require('./app');
 
-console.log(process.env);
+dotenv.config({ path: './config.env' });
+
+const DB = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD
+);
+
+// replace DB with process.env.DATABASE_LOCAL for local database
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
+  .then(() => {
+    console.log('DB connection successful');
+  });
+
+/* Create Document Example
+const testUser = new User({
+  name: 'sorawit nuankamma',
+  lineId: 'notlinexdd',
+  email: 'sorawit.nu@ku.th',
+  classroom: [
+    {
+      classId: 1,
+      role: 'owner',
+    },
+  ],
+});
+
+testUser
+  .save()
+  .then((doc) => {
+    console.log(doc);
+  })
+  .catch((err) => {
+    console.log('ERROR :', err);
+  });
+
+*/
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
