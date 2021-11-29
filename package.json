@@ -6,15 +6,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "nodemon server.js",
-    "start:prod": "NODE_ENV=production nodemon server.js"
+    "start:prod": "NODE_ENV=production nodemon server.js",
+    "debug": "ndb server.js"
   },
   "author": "sorawit",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.13.13",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "slugify": "^1.6.3",
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "eslint": "^8.3.0",
@@ -28,6 +33,6 @@
     "prettier": "^2.4.1"
   },
   "engines": {
-    "node":">=10.0.0"
+    "node": ">=10.0.0"
   }
 }

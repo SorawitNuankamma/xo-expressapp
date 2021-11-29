@@ -1,6 +1,8 @@
 /*
 This file for run express and middleware 
 */
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controller/errorController');
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
@@ -34,6 +36,7 @@ app.use(express.static(`${__dirname}/public`));
 // Put time in request
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+  console.log(req.headers);
   next();
 });
 
@@ -42,5 +45,13 @@ app.use((req, res, next) => {
 app.use('/api/test/informations', infoRouter);
 app.use('/api/users', userRouter);
 app.use('/api/classrooms', classroomRouter);
+
+// Unhandled route
+app.all('*', (req, res, next) => {
+  next(new AppError(`Can't find the ${req.originalUrl}`, 404));
+});
+
+// GLOBAL HANDLING MIDDLEWARE
+app.use(globalErrorHandler);
 
 module.exports = app;

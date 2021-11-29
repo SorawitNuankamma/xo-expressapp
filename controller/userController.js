@@ -1,107 +1,109 @@
 const User = require('../models/userModel');
+const APIFeatures = require('../utils/apifeatures');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
 
 //ROUTE HANDLER
-exports.getAllUsers = async (req, res) => {
-  try {
-    // BUILD QUERY
-    // 1 filtering
-    const queryObj = { ...req.query }; // create new query object
-    const excludeFields = ['page', 'sort', 'limit', 'fields']; // list of unquery word
-    excludeFields.forEach((el) => delete queryObj[el]); // get query  from database
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  // EXECUTE QUERY FOR IMPLEMENT ( AWAIT จะได้ผลลัพท์เป็น promise object ต้องเอา query แยกไว้)
+  const features = new APIFeatures(User.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+  const users = await features.query;
 
-    //2 advance filtering
-    let queryStr = JSON.stringify(queryObj); // แปลง queryObj เป็น string
-    queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`); // replace string เป็น queryObject
+  // SEND RESPONSE
+  res.status(200).json({
+    status: 'success',
+    data: {
+      users,
+    },
+  });
+});
 
-    const query = User.find(JSON.parse(queryStr)); // ค้นหาจาก query object
+exports.getUser = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new AppError('no user found with that id', 404));
+  }
 
-    // EXECUTE QUERY FOR IMPLEMENT ( AWAIT จะได้ผลลัพท์เป็น object ต้องเอา query แยกไว้)
-    const users = await query;
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+});
 
-    // SEND RESPONSE
-    res.status(200).json({
-      status: 'success',
-      data: {
-        users,
+exports.postUser = catchAsync(async (req, res, next) => {
+  const newUser = await User.create(req.body);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      newUser,
+    },
+  });
+});
+
+exports.updateUser = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!user) {
+    return next(new AppError('no user found with that id', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+});
+
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndDelete(req.params.id);
+
+  if (!user) {
+    return next(new AppError('no user found with that id', 404));
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.getUserStats = catchAsync(async (req, res, next) => {
+  const stats = await User.aggregate([
+    {
+      $match: { number: { $gte: 3 } },
+    },
+    {
+      $group: {
+        _id: '$email',
+        num: { $sum: 1 },
+        sumNum: { $sum: '$number' },
+        avg: { $avg: '$number' },
+        min: { $min: '$number' },
+        max: { $max: '$number' },
       },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'failed',
-      message: err,
-    });
-  }
-};
-
-exports.getUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'failed',
-      message: 'user not found',
-    });
-  }
-};
-
-exports.postUser = async (req, res) => {
-  try {
-    const newUser = await User.create(req.body);
-
-    console.log(req.body);
-    res.status(200).json({
-      status: 'success',
-      data: {
-        newUser,
-      },
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'failed',
-      message: 'Invalid data',
-    });
-  }
-};
-
-exports.updateUser = async (req, res) => {
-  try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    console.log(req.body);
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'failed',
-      message: 'Invalid id',
-    });
-  }
-};
-
-exports.deleteUser = async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.status(204).json({
-      status: 'success',
-      data: null,
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'failed',
-      message: 'Invalid id',
-    });
-  }
-};
+    },
+    {
+      $sort: { avg: 1 },
+    },
+    {
+      $match: { _id: { $ne: 'sorawit.nu@ku.th' } },
+    },
+  ]);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      stats,
+    },
+  });
+});
