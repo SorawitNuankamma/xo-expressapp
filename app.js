@@ -5,31 +5,47 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controller/errorController');
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+
+//ROUTER
+const userRouter = require('./routes/userRoutes');
+
 const app = express();
 
-// own import
-const infoRouter = require('./routes/infoRoutes');
-const userRouter = require('./routes/userRoutes');
-const classroomRouter = require('./routes/classroomRoutes');
+// GLOBAL MIDDLEWARE
+// Set security HTTP Header
+app.use(helmet());
 
-// MIDDLEWARE
-
-//Middleware if in dev mode
+// Development loging request
 if (process.env.NODE_ENV === 'development') {
-  // for dev loggin
   app.use(morgan('dev'));
 }
 
-// for get body as object
-app.use(express.json());
-// Example middleware
-/*
-app.use((req, res, next) => {
-  // applying for every request
-  console.log('Hello from middleware');
-  next();
+// Request limiter
+// จำกัด 100 request ต่อ ip ในช่วง 1 ชั่วโมงเวลา
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request, please try again in an hour',
 });
-*/
+app.use('/api', limiter);
+
+// Body Parser to req.body
+app.use(express.json({ limit: '10kb' }));
+
+// Data Sanitization against noSQL query injection
+app.use(mongoSanitize());
+
+// Data Sanitization against XSS
+app.use(xss());
+
+// Prevent Parameter Pollution
+app.use(hpp());
+
 // for access file on specifict path
 app.use(express.static(`${__dirname}/public`));
 
@@ -42,9 +58,7 @@ app.use((req, res, next) => {
 
 // ROUTE
 // route mouting
-app.use('/api/test/informations', infoRouter);
 app.use('/api/users', userRouter);
-app.use('/api/classrooms', classroomRouter);
 
 // Unhandled route
 app.all('*', (req, res, next) => {

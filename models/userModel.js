@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema(
   {
@@ -13,12 +14,16 @@ const userSchema = new mongoose.Schema(
     },
     lineID: {
       type: String,
-      unique: true,
     },
     email: {
       type: String,
       unique: true,
       validate: [validator.isEmail, 'must be an valid email'],
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
     },
     photo: String,
     password: {
@@ -32,6 +37,8 @@ const userSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    passwordResetToken: String,
+    passwordResetExpire: Date,
   },
   {
     toJSON: { virtuals: true },
@@ -72,6 +79,29 @@ userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
     return JWTTimeStamp < changedTimestamp;
   }
   return false;
+};
+
+// เพิ่มเวลาเปลี่ยน password ครั้งล่าสุดใน database
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetExpire = Date.now() + 10 * 60 * 1000;
+
+  console.log({ resetToken }, this.passwordResetToken);
+
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);

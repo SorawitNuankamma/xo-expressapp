@@ -3,6 +3,18 @@ const APIFeatures = require('../utils/apifeatures');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
+// Utility
+const filterObject = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedFields.includes(el)) {
+      newObj[el] = obj[el];
+    }
+  });
+  return newObj;
+};
+
+// Adminstator API
 //ROUTE HANDLER
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   // EXECUTE QUERY FOR IMPLEMENT ( AWAIT จะได้ผลลัพท์เป็น promise object ต้องเอา query แยกไว้)
@@ -104,6 +116,31 @@ exports.getUserStats = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       stats,
+    },
+  });
+});
+
+// User public API
+
+exports.updateMyUser = catchAsync(async (req, res, next) => {
+  // check condition
+  if (req.body.password) {
+    return next(new AppError('cannot change password on this route', 400));
+  }
+
+  //filter | argument ตามด้วยค่าใน DB ที่ user สามารถเปลี่ยนเองได้
+  const filterdBody = filterObject(req.body, 'name');
+  const updateUser = await User.findByIdAndUpdate(req.user.id, filterdBody, {
+    new: true,
+    runValidators: true,
+  });
+
+  //update document
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updateUser,
     },
   });
 });
