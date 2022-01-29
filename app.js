@@ -12,7 +12,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 
 //ROUTER
-const userRouter = require('./routes/userRoutes');
+const replayRouter = require('./routes/replayRoute');
 
 const app = express();
 
@@ -52,13 +52,12 @@ app.use(express.static(`${__dirname}/public`));
 // Put time in request
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  console.log(req.headers);
   next();
 });
 
 // ROUTE
 // route mouting
-app.use('/api/users', userRouter);
+app.use('/api/replays', replayRouter);
 
 // Unhandled route
 app.all('*', (req, res, next) => {
