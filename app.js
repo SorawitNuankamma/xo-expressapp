@@ -16,6 +16,9 @@ const replayRouter = require('./routes/replayRoute');
 
 const app = express();
 
+// allow all cors
+app.use(cors());
+
 // GLOBAL MIDDLEWARE
 // Set security HTTP Header
 app.use(helmet());
